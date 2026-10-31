@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>October Business Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #181c27;
+  --surface2: #1e2332;
+  --border: #2a2f42;
+  --text: #e8eaf2;
+  --muted: #7a8099;
+  --accent: #6c8aff;
+  --green: #3ecf8e;
+  --amber: #f5a623;
+  --red: #f06565;
+  --boys: #5b9bf8;
+  --girls: #f080c0;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f0f2f8;
+    --surface: #ffffff;
+    --surface2: #eef0f8;
+    --border: #d4d8eb;
+    --text: #1a1e2e;
+    --muted: #6870a0;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 28px 24px 60px; }
+h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -.02em; }
+.subtitle { color: var(--muted); font-size: .85rem; margin-top: 2px; }
+header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+.badge { background: var(--green); color: #0a1a10; font-size: .7rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; align-self: center; }
+
+/* KPI row */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+.kpi-label { font-size: .72rem; color: var(--muted); text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
+.kpi-value { font-family: 'DM Mono', monospace; font-size: 1.6rem; font-weight: 500; line-height: 1; }
+.kpi-sub { font-size: .75rem; color: var(--muted); margin-top: 5px; }
+.kpi-value.green { color: var(--green); }
+.kpi-value.amber { color: var(--amber); }
+.kpi-value.blue { color: var(--accent); }
+
+/* Two column layout */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 680px) { .two-col { grid-template-columns: 1fr; } }
+.three-col { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 680px) { .three-col { grid-template-columns: 1fr; } }
+
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.card-title { font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: 16px; }
+
+/* Bar chart */
+.bar-chart { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 10px; font-size: .75rem; }
+.bar-name { width: 130px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.bar-track { flex: 1; background: var(--surface2); border-radius: 4px; height: 8px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.bar-num { width: 54px; text-align: right; color: var(--muted); font-family: 'DM Mono', monospace; font-size: .7rem; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; font-size: .75rem; }
+th { text-align: left; color: var(--muted); font-weight: 500; padding: 0 8px 10px; border-bottom: 1px solid var(--border); }
+th:not(:first-child) { text-align: right; }
+td { padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+td:not(:first-child) { text-align: right; font-family: 'DM Mono', monospace; }
+tr:last-child td { border-bottom: none; }
+.tag { display: inline-block; font-size: .65rem; padding: 2px 6px; border-radius: 10px; font-weight: 500; }
+.tag.out { background: #2a1a1a; color: var(--red); }
+.tag.low { background: #2a220a; color: var(--amber); }
+.tag.off { background: var(--surface2); color: var(--muted); }
+.tag.ok { background: #0a2018; color: var(--green); }
+
+/* Donut chart */
+.donut-wrap { display: flex; align-items: center; gap: 20px; }
+svg.donut { flex-shrink: 0; }
+.legend { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: .75rem; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* Boys vs girls stacked bar */
+.split-bars { display: flex; flex-direction: column; gap: 10px; }
+.split-row { }
+.split-name { font-size: .72rem; color: var(--muted); margin-bottom: 4px; }
+.split-track { display: flex; border-radius: 4px; overflow: hidden; height: 10px; }
+.split-boys { background: var(--boys); }
+.split-girls { background: var(--girls); }
+.split-legend { display: flex; gap: 16px; font-size: .7rem; color: var(--muted); margin-bottom: 14px; }
+.split-legend span { display: flex; align-items: center; gap: 5px; }
+.dot-b { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--boys); }
+.dot-g { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--girls); }
+
+/* Stock alert */
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+.alert-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--surface2); border-radius: 8px; font-size: .75rem; }
+.alert-item .name { font-weight: 500; }
+.alert-item .days { color: var(--muted); font-family: 'DM Mono', monospace; }
+
+/* Margin scatter */
+.margin-list { display: flex; flex-direction: column; gap: 7px; }
+.margin-row { display: flex; align-items: center; gap: 8px; font-size: .72rem; }
+.m-name { width: 120px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-bar-track { flex: 1; background: var(--surface2); border-radius: 3px; height: 6px; overflow: hidden; }
+.m-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--green)); }
+.m-pct { width: 40px; text-align: right; color: var(--muted); font-family: 'DM Mono', monospace; font-size: .68rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>October Dashboard</h1>
+    <div class="subtitle" id="subtitle"></div>
+  </div>
+  <div class="badge">Live Data</div>
+</header>
+
+<!-- KPI Row (rendered from data) -->
+<div class="kpi-grid" id="kpi-grid"></div>
+
+<!-- Where revenue goes + 90-day outlook -->
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Where the Revenue Goes</div>
+    <div class="bar-chart" id="flow-bars"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">90-Day Outlook (at current sales rate)</div>
+    <div class="bar-chart" id="outlook"></div>
+  </div>
+</div>
+
+<!-- Top products profit + margin -->
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Top Products by Total Profit</div>
+    <div class="bar-chart" id="profit-bars"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Profit Margin by Product</div>
+    <div class="margin-list" id="margin-bars"></div>
+  </div>
+</div>
+
+<!-- Revenue share donut + boys vs girls -->
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Revenue by Category</div>
+    <div class="donut-wrap">
+      <svg class="donut" width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="48" fill="none" stroke="var(--surface2)" stroke-width="18"/>
+        <!-- segments drawn via JS -->
+        <g id="donut-segs"></g>
+        <text x="60" y="56" text-anchor="middle" fill="var(--text)" font-family="DM Sans" font-size="11" font-weight="600" id="donut-total"></text>
+        <text x="60" y="69" text-anchor="middle" fill="var(--muted)" font-family="DM Sans" font-size="8">revenue</text>
+      </svg>
+      <div class="legend" id="donut-legend"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Boys vs Girls Sales Split</div>
+    <div class="split-legend">
+      <span><span class="dot-b"></span>Boys side</span>
+      <span><span class="dot-g"></span>Girls side</span>
+    </div>
+    <div class="split-bars" id="split-bars"></div>
+  </div>
+</div>
+
+<!-- Stock status table + restock alerts -->
+<div class="three-col">
+  <div class="card">
+    <div class="card-title">Stock Status — All Products</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Purchased</th>
+          <th>Sold</th>
+          <th>Left</th>
+          <th>Days left</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="stock-table"></tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-title">Restock Alerts</div>
+    <div class="alert-list" id="alerts"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────
+// <DATA>
+const summary = {"revenue": 73548, "spent": 40426.990000000005, "profit": 33121.009999999995, "margin": 0.45033189209767766, "variance": 0.015, "net": 18017.789999999994, "daily": 1003.6669696969695, "units": 4110, "days": 33, "projProfit": 113772.6, "projRevenue": 255758.75999999998, "runRate": 1264.14, "updated": "31 Oct 2026"};
+const products = [
+  {"name": "Sour Jelly", "qty": 120, "sold": 84, "left": 36, "daysLeft": 8.8, "profit": 1010.25, "margin": 42.09, "revenue": 2400, "boysUnits": 40, "girlsUnits": 44, "category": "Sweets", "tracked": true},
+  {"name": "Mi goreng", "qty": 1080, "sold": 1080, "left": 0, "daysLeft": 0, "profit": 5839.02, "margin": 45.43, "revenue": 12852, "boysUnits": 730, "girlsUnits": 350, "category": "Noodles", "tracked": true},
+  {"name": "Fanta", "qty": 504, "sold": 420, "left": 84, "daysLeft": 6.57, "profit": 4698.96, "margin": 46.62, "revenue": 10080, "boysUnits": 318, "girlsUnits": 102, "category": "Drinks", "tracked": true},
+  {"name": "Pepsi 330", "qty": 144, "sold": 126, "left": 18, "daysLeft": 4.22, "profit": 1092.96, "margin": 63.25, "revenue": 1728, "boysUnits": 66, "girlsUnits": 60, "category": "Drinks", "tracked": true},
+  {"name": "Sprite", "qty": 408, "sold": 348, "left": 60, "daysLeft": 5.66, "profit": 3845.91, "margin": 47.13, "revenue": 8160, "boysUnits": 251, "girlsUnits": 97, "category": "Drinks", "tracked": true},
+  {"name": "Pepsi 500", "qty": 24, "sold": 24, "left": 0, "daysLeft": 0, "profit": 248.1, "margin": 51.69, "revenue": 480, "boysUnits": 24, "girlsUnits": 0, "category": "Drinks", "tracked": false},
+  {"name": "Jelly Jerseys", "qty": 120, "sold": 120, "left": 0, "daysLeft": 0, "profit": 1010.25, "margin": 42.09, "revenue": 2400, "boysUnits": 54, "girlsUnits": 66, "category": "Sweets", "tracked": true},
+  {"name": "Jelly Babies", "qty": 168, "sold": 132, "left": 36, "daysLeft": 6.96, "profit": 1414.35, "margin": 42.09, "revenue": 3360, "boysUnits": 69, "girlsUnits": 63, "category": "Sweets", "tracked": true},
+  {"name": "Cadbury Astro", "qty": 48, "sold": 48, "left": 0, "daysLeft": 0, "profit": 616.24, "margin": 42.79, "revenue": 1440, "boysUnits": 22, "girlsUnits": 26, "category": "Choc", "tracked": false},
+  {"name": "Cadbury 5 stars", "qty": 120, "sold": 120, "left": 0, "daysLeft": 0, "profit": 1566.5, "margin": 43.51, "revenue": 3600, "boysUnits": 55, "girlsUnits": 65, "category": "Choc", "tracked": true},
+  {"name": "Cadbury White Biscuits", "qty": 288, "sold": 240, "left": 48, "daysLeft": 5.96, "profit": 3965.04, "margin": 45.89, "revenue": 8640, "boysUnits": 125, "girlsUnits": 115, "category": "Choc", "tracked": true},
+  {"name": "Kitkat", "qty": 96, "sold": 96, "left": 0, "daysLeft": 0, "profit": 840.04, "margin": 43.75, "revenue": 1920, "boysUnits": 53, "girlsUnits": 43, "category": "Choc", "tracked": true},
+  {"name": "Snickers", "qty": 70, "sold": 70, "left": 0, "daysLeft": 0, "profit": 459.2, "margin": 32.8, "revenue": 1400, "boysUnits": 46, "girlsUnits": 24, "category": "Choc", "tracked": true},
+  {"name": "Peanuts", "qty": 36, "sold": 36, "left": 0, "daysLeft": 0, "profit": 170.05, "margin": 47.24, "revenue": 360, "boysUnits": 26, "girlsUnits": 10, "category": "Snacks", "tracked": false},
+  {"name": "Oreo Original", "qty": 80, "sold": 80, "left": 0, "daysLeft": 0, "profit": 616.2, "margin": 30.81, "revenue": 2000, "boysUnits": 52, "girlsUnits": 28, "category": "Biscuits", "tracked": false},
+  {"name": "Oreo Golden", "qty": 80, "sold": 80, "left": 0, "daysLeft": 0, "profit": 616.2, "margin": 30.81, "revenue": 2000, "boysUnits": 52, "girlsUnits": 28, "category": "Biscuits", "tracked": false},
+  {"name": "Cheas Naks", "qty": 100, "sold": 100, "left": 0, "daysLeft": 0, "profit": 340.05, "margin": 56.68, "revenue": 600, "boysUnits": 52, "girlsUnits": 48, "category": "Snacks", "tracked": false},
+  {"name": "Lays yellow", "qty": 144, "sold": 144, "left": 0, "daysLeft": 0, "profit": 970.14, "margin": 44.91, "revenue": 2160, "boysUnits": 75, "girlsUnits": 69, "category": "Snacks", "tracked": true},
+  {"name": "Fritos", "qty": 96, "sold": 96, "left": 0, "daysLeft": 0, "profit": 458.1, "margin": 59.65, "revenue": 768, "boysUnits": 50, "girlsUnits": 46, "category": "Snacks", "tracked": false},
+  {"name": "Diddle daddles", "qty": 192, "sold": 168, "left": 24, "daysLeft": 2.78, "profit": 1415, "margin": 49.13, "revenue": 2880, "boysUnits": 114, "girlsUnits": 54, "category": "Snacks", "tracked": true},
+  {"name": "Kitkat white", "qty": 48, "sold": 48, "left": 0, "daysLeft": 0, "profit": 456.05, "margin": 47.51, "revenue": 960, "boysUnits": 26, "girlsUnits": 22, "category": "Choc", "tracked": true},
+  {"name": "Fruit Jubes", "qty": 48, "sold": 48, "left": 0, "daysLeft": 0, "profit": 404.1, "margin": 42.09, "revenue": 960, "boysUnits": 36, "girlsUnits": 12, "category": "Sweets", "tracked": false},
+  {"name": "Cadbury chocolate biscuits", "qty": 48, "sold": 48, "left": 0, "daysLeft": 0, "profit": 664.2, "margin": 46.13, "revenue": 1440, "boysUnits": 24, "girlsUnits": 24, "category": "Choc", "tracked": true},
+  {"name": "Jelly funky flavour", "qty": 48, "sold": 12, "left": 36, "daysLeft": null, "profit": 404.1, "margin": 42.09, "revenue": 960, "boysUnits": 12, "girlsUnits": 0, "category": "Sweets", "tracked": true}
+];
+// </DATA>
+
+products.forEach(p => { if (p.daysLeft == null) { p.noRate = true; p.daysLeft = 99; } });
+
+const active = products.filter(p => !p.hidden && p.profit > 0);
+
+
+// ── KPIs ─────────────────────────────────────────────────────────
+const R2 = v => 'R' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const R0 = v => 'R' + Math.round(v).toLocaleString('en-US');
+const tracked = products.filter(p => p.tracked).length;
+const inStock = products.filter(p => p.tracked && p.left > 0).length;
+const S = summary;
+const kpis = [
+  ['Total Revenue', R0(S.revenue), 'green', 'Across all products'],
+  ['Total Spent', R2(S.spent), 'amber', 'Cost of stock purchased'],
+  ['Total Profit', R2(S.profit), 'green', 'Revenue minus spent'],
+  ['Profit Margin', (S.margin*100).toFixed(2)+'%', 'blue', 'Profit ÷ revenue'],
+  ['Net Profit', R2(S.net), 'green', 'After variance & fixed costs'],
+  ['Variance', (S.variance*100).toFixed(2)+'%', 'blue', 'Allowance taken off revenue'],
+  ['Daily Profit', R2(S.daily), 'green', `Based on ${S.days}-day period`],
+  ['Total Units', S.units.toLocaleString('en-US'), 'amber', 'Units purchased'],
+  ['Number of Days', S.days, 'blue', 'Trading days so far'],
+  ['Products Tracked', tracked, 'blue', `Selling from now on · ${products.length - tracked} discontinued`],
+  ['Products in Stock', inStock, inStock < tracked/2 ? 'amber' : 'green', `${tracked - inStock} of ${tracked} sold out`],
+];
+document.getElementById('kpi-grid').innerHTML = kpis.map(k => `
+  <div class="kpi"><div class="kpi-label">${k[0]}</div><div class="kpi-value ${k[2]}">${k[1]}</div><div class="kpi-sub">${k[3]}</div></div>`).join('');
+document.getElementById('subtitle').textContent = `${S.days} trading days · Snack & Candy Business · Updated ${S.updated}`;
+
+// ── WHERE REVENUE GOES ───────────────────────────────────────────
+const varAmt = S.revenue * S.variance;
+const fixedAmt = S.profit - varAmt - S.net;
+[['Stock cost', S.spent, 'var(--amber)'], ['Variance', varAmt, 'var(--muted)'], ['Fixed costs', fixedAmt, 'var(--red)'], ['Net profit', S.net, 'var(--green)']].forEach(([n, v, c]) => {
+  document.getElementById('flow-bars').innerHTML += `
+    <div class="bar-row"><div class="bar-name">${n}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${(v/S.revenue*100).toFixed(1)}%;background:${c}"></div></div>
+    <div class="bar-num" style="width:96px">${R0(v)} · ${(v/S.revenue*100).toFixed(0)}%</div></div>`;
+});
+
+// ── 90-DAY OUTLOOK ───────────────────────────────────────────────
+[['Projected revenue', R0(S.projRevenue)], ['Projected profit', R0(S.projProfit)], ['Profit per day (run-rate)', R2(S.runRate)]].forEach(([n, v]) => {
+  document.getElementById('outlook').innerHTML += `
+    <div class="alert-item"><div class="name">${n}</div><div class="days" style="color:var(--text)">${v}</div></div>`;
+});
+
+// ── PROFIT BARS ─────────────────────────────────────────────────
+const sorted = [...active].sort((a,b) => b.profit - a.profit).slice(0,10);
+const maxP = sorted[0].profit;
+const profitContainer = document.getElementById('profit-bars');
+sorted.forEach(p => {
+  const pct = (p.profit / maxP * 100).toFixed(1);
+  profitContainer.innerHTML += `
+    <div class="bar-row">
+      <div class="bar-name">${p.name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--green)"></div></div>
+      <div class="bar-num">R${(p.profit/1000).toFixed(1)}k</div>
+    </div>`;
+});
+
+// ── MARGIN BARS ─────────────────────────────────────────────────
+const marginSorted = [...active].sort((a,b) => b.margin - a.margin).slice(0,12);
+const marginContainer = document.getElementById('margin-bars');
+marginSorted.forEach(p => {
+  marginContainer.innerHTML += `
+    <div class="margin-row">
+      <div class="m-name">${p.name}</div>
+      <div class="m-bar-track"><div class="m-bar-fill" style="width:${p.margin}%"></div></div>
+      <div class="m-pct">${p.margin.toFixed(0)}%</div>
+    </div>`;
+});
+
+// ── DONUT ────────────────────────────────────────────────────────
+const catMap = {};
+active.forEach(p => {
+  if (!catMap[p.category]) catMap[p.category] = 0;
+  catMap[p.category] += p.revenue;
+});
+const catEntries = Object.entries(catMap).filter(([k])=>k).sort((a,b)=>b[1]-a[1]);
+const totalRev = catEntries.reduce((s,[,v])=>s+v,0);
+document.getElementById('donut-total').textContent = 'R' + Math.round(totalRev/1000) + 'k';
+const colors = ['#6c8aff','#3ecf8e','#f5a623','#f080c0','#5b9bf8','#ff8c69','#a0a8c0'];
+const r=48, cx=60, cy=60, circ=2*Math.PI*r;
+let offset=0;
+const segsEl = document.getElementById('donut-segs');
+const legendEl = document.getElementById('donut-legend');
+catEntries.forEach(([cat, val], i) => {
+  const frac = val / totalRev;
+  const dash = frac * circ;
+  const gap = circ - dash;
+  const rot = offset * 360 - 90;
+  segsEl.innerHTML += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${colors[i]}" stroke-width="18"
+    stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}"
+    stroke-dashoffset="${(-offset*circ + circ/4 * 0).toFixed(2)}"
+    transform="rotate(${rot} ${cx} ${cy})"/>`;
+  legendEl.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div><span>${cat} <span style="color:var(--muted);font-size:.68rem">R${(val/1000).toFixed(0)}k</span></span></div>`;
+  offset += frac;
+});
+
+// ── BOYS VS GIRLS SPLIT ──────────────────────────────────────────
+const topSplit = [...active]
+  .filter(p => p.boysUnits + p.girlsUnits > 0)
+  .sort((a,b) => (b.boysUnits+b.girlsUnits) - (a.boysUnits+a.girlsUnits))
+  .slice(0, 8);
+const splitContainer = document.getElementById('split-bars');
+topSplit.forEach(p => {
+  const total = p.boysUnits + p.girlsUnits;
+  const boysPct = (p.boysUnits / total * 100).toFixed(1);
+  const girlsPct = (p.girlsUnits / total * 100).toFixed(1);
+  splitContainer.innerHTML += `
+    <div class="split-row">
+      <div class="split-name">${p.name}</div>
+      <div class="split-track">
+        <div class="split-boys" style="width:${boysPct}%" title="Boys: ${p.boysUnits}"></div>
+        <div class="split-girls" style="width:${girlsPct}%" title="Girls: ${p.girlsUnits}"></div>
+      </div>
+    </div>`;
+});
+
+// ── STOCK TABLE ──────────────────────────────────────────────────
+const stockSorted = [...active].sort((a,b) => (b.tracked - a.tracked) || a.daysLeft - b.daysLeft || a.name.localeCompare(b.name));
+const tbody = document.getElementById('stock-table');
+stockSorted.forEach(p => {
+  let statusTag, statusLabel;
+  if (!p.tracked) { statusTag='off'; statusLabel='Not restocking'; }
+  else if (p.left === 0) { statusTag='out'; statusLabel='Out of stock'; }
+  else if (p.noRate) { statusTag='ok'; statusLabel='New · no rate yet'; }
+  else if (p.daysLeft < 4) { statusTag='low'; statusLabel=`${p.daysLeft.toFixed(1)}d left`; }
+  else { statusTag='ok'; statusLabel='OK'; }
+  tbody.innerHTML += `
+    <tr>
+      <td>${p.name}</td>
+      <td>${p.qty}</td>
+      <td>${p.sold}</td>
+      <td>${p.left}</td>
+      <td style="font-family:'DM Mono',monospace">${p.noRate ? 'n/a' : p.daysLeft > 0 ? p.daysLeft.toFixed(1) : '—'}</td>
+      <td><span class="tag ${statusTag}">${statusLabel}</span></td>
+    </tr>`;
+});
+
+// ── ALERTS ───────────────────────────────────────────────────────
+const alertsEl = document.getElementById('alerts');
+const urgent = active.filter(p => p.tracked && (p.left === 0 || p.daysLeft < 4)).sort((a,b)=>a.daysLeft-b.daysLeft);
+urgent.slice(0, 8).forEach(p => {
+  const isOut = p.left === 0;
+  alertsEl.innerHTML += `
+    <div class="alert-item">
+      <div>
+        <div class="name">${p.name}</div>
+        <div class="days">${isOut ? '0 units left' : `${p.left} units · ${p.daysLeft.toFixed(1)}d`}</div>
+      </div>
+      <span class="tag ${isOut ? 'out' : 'low'}">${isOut ? 'Restock now' : 'Running low'}</span>
+    </div>`;
+});
+if (urgent.length === 0) {
+  alertsEl.innerHTML = `<div style="color:var(--green);font-size:.8rem;padding:12px 0">All products well stocked ✓</div>`;
+}
+</script>
+</body>
+</html>
