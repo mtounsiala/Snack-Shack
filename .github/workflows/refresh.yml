@@ -1,0 +1,58 @@
+name: Refresh dashboard
+
+on:
+  schedule:
+    - cron: "0 * * * *"      # every hour
+  workflow_dispatch: {}       # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install openpyxl
+
+      - name: Download the workbook from OneDrive
+        env:
+          SHARE_LINK: ${{ secrets.ONEDRIVE_LINK }}
+        run: |
+          python - <<'EOF'
+          import os, base64, urllib.request
+          link = os.environ["SHARE_LINK"].strip()
+          token = "u!" + base64.urlsafe_b64encode(link.encode()).decode().rstrip("=")
+          url = f"https://api.onedrive.com/v1.0/shares/{token}/root/content"
+          urllib.request.urlretrieve(url, "Financial_Document.xlsx")
+          print("Downloaded workbook")
+          EOF
+
+      - name: Refresh the dashboard from the workbook
+        run: python refresh_dashboard.py Financial_Document.xlsx
+
+      - name: Prepare site
+        run: |
+          mkdir site
+          cp October_Business_Dashboard.html site/index.html
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
